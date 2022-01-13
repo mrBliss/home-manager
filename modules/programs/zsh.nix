@@ -550,22 +550,25 @@ in
           fi
         '') cfg.plugins)}
 
-        # History options should be set in .zshrc and after oh-my-zsh sourcing.
-        # See https://github.com/nix-community/home-manager/issues/177.
-        HISTSIZE="${toString cfg.history.size}"
-        SAVEHIST="${toString cfg.history.save}"
-        ${optionalString (cfg.history.ignorePatterns != []) "HISTORY_IGNORE=${lib.escapeShellArg "(${lib.concatStringsSep "|" cfg.history.ignorePatterns})"}"}
-        ${if versionAtLeast config.home.stateVersion "20.03"
-          then ''HISTFILE="${cfg.history.path}"''
-          else ''HISTFILE="$HOME/${cfg.history.path}"''}
-        mkdir -p "$(dirname "$HISTFILE")"
+        ${optionalString (!(cfg.prezto.enable && builtins.elem "history" cfg.prezto.pmodules)) ''
+          # History options should be set in .zshrc and after oh-my-zsh sourcing.
+          # See https://github.com/nix-community/home-manager/issues/177.
+          HISTSIZE="${toString cfg.history.size}"
+          SAVEHIST="${toString cfg.history.save}"
+          ${optionalString (cfg.history.ignorePatterns != []) "HISTORY_IGNORE=${lib.escapeShellArg "(${lib.concatStringsSep "|" cfg.history.ignorePatterns})"}"}
+          ${if versionAtLeast config.home.stateVersion "20.03"
+            then ''HISTFILE="${cfg.history.path}"''
+            else ''HISTFILE="$HOME/${cfg.history.path}"''}
+          mkdir -p "$(dirname "$HISTFILE")"
 
-        setopt HIST_FCNTL_LOCK
-        ${if cfg.history.ignoreDups then "setopt" else "unsetopt"} HIST_IGNORE_DUPS
-        ${if cfg.history.ignoreSpace then "setopt" else "unsetopt"} HIST_IGNORE_SPACE
-        ${if cfg.history.expireDuplicatesFirst then "setopt" else "unsetopt"} HIST_EXPIRE_DUPS_FIRST
-        ${if cfg.history.share then "setopt" else "unsetopt"} SHARE_HISTORY
-        ${if cfg.history.extended then "setopt" else "unsetopt"} EXTENDED_HISTORY
+          setopt HIST_FCNTL_LOCK
+          ${if cfg.history.ignoreDups then "setopt" else "unsetopt"} HIST_IGNORE_DUPS
+          ${if cfg.history.ignoreSpace then "setopt" else "unsetopt"} HIST_IGNORE_SPACE
+          ${if cfg.history.expireDuplicatesFirst then "setopt" else "unsetopt"} HIST_EXPIRE_DUPS_FIRST
+          ${if cfg.history.share then "setopt" else "unsetopt"} SHARE_HISTORY
+          ${if cfg.history.extended then "setopt" else "unsetopt"} EXTENDED_HISTORY
+        ''}
+
         ${if cfg.autocd != null then "${if cfg.autocd then "setopt" else "unsetopt"} autocd" else ""}
 
         ${cfg.initExtra}
